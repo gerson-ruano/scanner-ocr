@@ -1,44 +1,36 @@
-import PyPDF2
 import os
-import re
-#import pdfplumber
+from config import CARPETA_ARCHIVOS, RUTA_EXCEL
+from ocr_utils import extract_text_from_pdf_tesseract, extract_text_with_tesseract
+from extractors import extract_fields
+from excel_utils import guardar_en_excel
 
-def extract_invoice_info(pdf_file_path):
+def main():
+    if not os.path.exists(CARPETA_ARCHIVOS):
+        print(f"❌ Carpeta no encontrada: {CARPETA_ARCHIVOS}")
+        return
 
-    with open(pdf_file_path, 'rb') as file:
-        pdf_reader = PyPDF2.PdfReader(file)
-        text = ''
-        
-        for page_num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text()
-          
+    for nombre_archivo in os.listdir(CARPETA_ARCHIVOS):
+        ruta_completa = os.path.join(CARPETA_ARCHIVOS, nombre_archivo)
 
-        invoice_number_pattern = r'INVOICE\s*\s*(\d+)'
-        bill_to_pattern = r'Bill\s*To\s*:\s*(.*)'
-        items_pattern = r'(.*?)\s*(\d+)\s*(\d+\.\d{2})\s*(\d+\.\d{2})'
-        notes_terms_pattern = r'Notes\s*:\s*(.*?)\s*Terms\s*:\s*(.*)'
-       
-        #Extracted information
-        '''invoice_number = invoice_number_match.group (1) if invoice_number_match else None 
-        bill_to = bill_to_match.group(1) if bill_to_match else None
-        items = items_matches
-        notes, terms = notes_terms_match.groups() if notes_terms_match else (None, None) 
-        match = re.search(discount_tax_pattern, text)
-        discount_percentage = match.group(1)
-        tax_percentagematch.group(2)
+        if not os.path.isfile(ruta_completa):
+            continue
 
-        print(f'Invoice Number: {invoice_number}') 
-        print('Bill To: {bill_to}') 
-        print('Items: ')
-        for item in items:
-            print(f' - (item[0]): (item[1]) units x (item[2]) = {item[3]}')
-        print (f'Notes: {notes}')
-        print('Terms: {terms}')
-        print('Discount Percentage: {discount_percentage}') 
-        print (f'Tax Percentage: {tax_percentage}')'''
-        
-        print(text)
-extract_invoice_info("invoices/invoice3.pdf")
-        
-        
+        if nombre_archivo.lower().endswith('.pdf'):
+            texto = extract_text_from_pdf_tesseract(ruta_completa)
+        elif nombre_archivo.lower().endswith(('.jpg', '.jpeg', '.png', '.tiff')):
+            texto = extract_text_with_tesseract(ruta_completa)
+        else:
+            continue
+
+        print(f"📄 Procesando: {nombre_archivo}")
+
+        if texto.strip():
+            campos = extract_fields(texto, nombre_archivo)
+            guardar_en_excel(campos, RUTA_EXCEL)
+        else:
+            print(f"⚠️ No se pudo extraer texto de {nombre_archivo}")
+
+    print("✅ Proceso completado. Revisa el archivo Excel.")
+
+if __name__ == "__main__":
+    main()
