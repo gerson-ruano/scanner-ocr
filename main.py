@@ -1,8 +1,8 @@
 import os
-from config import CARPETA_ARCHIVOS, RUTA_EXCEL
-from ocr_utils import extract_text_from_pdf_tesseract, extract_text_with_tesseract
-from extractors import extract_fields
-from excel_utils import guardar_en_excel
+from utils import CARPETA_ARCHIVOS, RUTA_EXCEL
+from clases.ocr_utils import extract_text_from_pdf_tesseract, extract_text_with_tesseract
+from clases.extractors import extract_fields
+from clases.excel_utils import guardar_en_excel
 
 
 def main():
